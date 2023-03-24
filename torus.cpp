@@ -1,55 +1,68 @@
 #include <iostream>
 #include <chrono>
+#include <ctime>
 #include <thread>
 using namespace std;
 
 
-const int X_RESOLUTION = 20;
-const int Y_RESOLUTION = 20;
+const int RESOLUTION = 20;
 
 
-void update_canvas(char (&canvas)[X_RESOLUTION][Y_RESOLUTION], int x_pos_i, int x_pos_j)
+void clear_canvas(char (&canvas)[RESOLUTION][RESOLUTION])
 {
-    for (int j = 0; j < X_RESOLUTION; j++ )
-        for(int i = 0; i < Y_RESOLUTION; i++)
-            if (j == x_pos_j && i == x_pos_i)
-                canvas[i][j] = 'x';
-            else 
-                canvas[i][j] = ' ';
+    for(int i = 0; i < RESOLUTION; i++)
+        for(int j = 0; j < RESOLUTION; j++)
+            canvas[i][j] = ' ';
+}
 
+void update_canvas(char (&canvas)[RESOLUTION][RESOLUTION], float delta_time)
+{
+    
+}
+
+float compute_delta_time()
+{
+    return 0;
 }
 
 int main() {
-    char canvas[X_RESOLUTION][Y_RESOLUTION];
 
+    // Where we're gonna draw
+    char canvas[RESOLUTION][RESOLUTION];
+    
+    // Initialization
+    clear_canvas(canvas);
 
-
-    // Update loop
-    int x_pos_i = 0, x_pos_j = 0;
-
+    // Main loop
+    auto frame_start = chrono::high_resolution_clock::now();
     while (true)
     {
+        // Compute delta time: the time between the last frame start and now
+        auto now = chrono::high_resolution_clock::now();
+        auto delta_time = chrono::duration_cast<chrono::microseconds>(now - frame_start).count() / 1000000.0f;
+        frame_start = now;
 
-        if (x_pos_i == X_RESOLUTION - 1)
-            x_pos_j = (x_pos_j + 1) % Y_RESOLUTION;
-
-        x_pos_i = (x_pos_i + 1) % X_RESOLUTION;
-
-        update_canvas(canvas, x_pos_i, x_pos_j);
+        // Update canvas based on delta time
+        update_canvas(canvas, delta_time);
 
         // print canvas to terminal
-        for (int i = 0; i < Y_RESOLUTION; i++)
+        for (int i = 0; i < RESOLUTION; i++)
         {
-            for (int j = 0; j < X_RESOLUTION; j++)
+            for (int j = 0; j < RESOLUTION; j++)
             {
                 cout << canvas[i][j] << " ";
             }
             cout << endl;
         }
 
+        // This is equivalent to a swap buffers
         cout << flush;
+
+        // Wait for next update
         this_thread::sleep_for(chrono::milliseconds(100));
-        cout << "\033[" << X_RESOLUTION << "A";
+
+        // Reset cursor back to draw position
+        cout << "\033[" << RESOLUTION << "A";
     }
     
 
