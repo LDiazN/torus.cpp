@@ -2,11 +2,13 @@
 #include <chrono>
 #include <ctime>
 #include <thread>
+#include <assert.h>
+#include <cmath>
+
 using namespace std;
 
 
 const int RESOLUTION = 20;
-
 
 void clear_canvas(char (&canvas)[RESOLUTION][RESOLUTION])
 {
@@ -15,9 +17,23 @@ void clear_canvas(char (&canvas)[RESOLUTION][RESOLUTION])
             canvas[i][j] = ' ';
 }
 
-void update_canvas(char (&canvas)[RESOLUTION][RESOLUTION], float delta_time)
+void torus(float theta, float phi, float torus_radius, float tube_radius, float &out_x, float &out_y, float &out_z)
+{
+    assert(tube_radius < torus_radius && "Radius of tube should be smaller than radius of torus");
+    out_x = (torus_radius + tube_radius * cos(theta)) * cos(phi);
+    out_y = (torus_radius + tube_radius * cos(theta)) * sin(phi);
+    out_z = tube_radius * sin(theta);
+}
+
+void torus_normal(float theta, float phi, float torus_radius, float tube_radius, float &out_x, float &out_y, float &out_z)
 {
     
+}
+
+void update_canvas(char (&canvas)[RESOLUTION][RESOLUTION], float delta_time)
+{
+
+    cout << delta_time << endl;
 }
 
 float compute_delta_time()
