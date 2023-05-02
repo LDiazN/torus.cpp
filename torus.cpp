@@ -68,13 +68,24 @@ void torus_normal(float theta, float phi, float torus_radius, float tube_radius,
     torus_tangent(theta, phi, tube_radius, tangent_x, tangent_y, tangent_z);
     torus_bitangent(theta, phi, torus_radius, tube_radius, bitangent_x, bitangent_y, bitangent_z);
 
-    cross(tangent_x, tangent_y, tangent_z, bitangent_x, bitangent_y, bitangent_z, out_x, out_y, out_z);
+    // cross(tangent_x, tangent_y, tangent_z, bitangent_x, bitangent_y, bitangent_z, out_x, out_y, out_z);
+    cross(bitangent_x, bitangent_y, bitangent_z,tangent_x, tangent_y, tangent_z, out_x, out_y, out_z);
     normalize(out_x, out_y, out_z, out_x, out_y, out_z);
 
-    // DEBUG ONLY
-    // out_x = cos(theta);
-    // out_y = sin(theta);
-    // out_z = 0;
+    // DEBUG ONLY -----------------------------
+    // We will compute a point in the middle of the tube and use it to compute the direction of the normal using a point in the torus surface
+    float surface_x, surface_y, surface_z;
+    torus(theta, phi, torus_radius, tube_radius, surface_x, surface_y, surface_z);
+    float middle_x, middle_y, middle_z;
+    middle_x = (torus_radius) * cos(phi);
+    middle_y = (torus_radius) * sin(phi);
+    middle_z = 0;
+
+    out_x = (surface_x - middle_x);
+    out_y = (surface_y - middle_y);
+    out_z = (surface_z - middle_z);
+
+    normalize(out_x, out_y, out_z, out_x, out_y, out_z);
 }
 
 void scale(float scale, float x, float y, float z, float& out_x, float& out_y, float& out_z)
@@ -105,7 +116,7 @@ void update_canvas(char (&canvas)[RESOLUTION][RESOLUTION], float time_passed)
     float depth_buffer[RESOLUTION][RESOLUTION];
 
     // Define light direction for illumination
-    float LIGHT_DIR_X = 0, LIGHT_DIR_Y = 0, LIGHT_DIR_Z = 1;
+    float LIGHT_DIR_X = 0, LIGHT_DIR_Y = 1, LIGHT_DIR_Z = 1;
     normalize(LIGHT_DIR_X, LIGHT_DIR_Y, LIGHT_DIR_Z, LIGHT_DIR_X, LIGHT_DIR_Y, LIGHT_DIR_Z);
 
     // Define shade table: used to find the right color for this pixel. We have 12 shades.
@@ -133,6 +144,10 @@ void update_canvas(char (&canvas)[RESOLUTION][RESOLUTION], float time_passed)
         for (int j = 0; j < TORUS_RESOLUTION; j++)
         {
             const float theta = step_size * j;
+
+            // phi: Torus radius
+            // theta: Tube radius
+
             float x, y, z; // point coordinates
             float n_x, n_y, n_z; // point normal
 
@@ -142,9 +157,9 @@ void update_canvas(char (&canvas)[RESOLUTION][RESOLUTION], float time_passed)
             torus(theta, phi,torus_radius, tube_radius, x, y, z);
             torus_normal(theta, phi, torus_radius, tube_radius, n_x, n_y, n_z);
 
-            n_x += cos(phi);
-            n_y += sin(phi);
-            n_z += 0;
+            // n_x = cos(theta);
+            // n_y = sin(theta);
+            // n_z = 0;
 
             // Value stored in Depth Buffer
             const float z_inv = z != 0 ? 1 / z : 0;
@@ -174,8 +189,8 @@ void update_canvas(char (&canvas)[RESOLUTION][RESOLUTION], float time_passed)
                     normal_dot_light = normal_dot_light * 0.99;
 
                 // Choose lighting:
-                if(normal_dot_light > 0 || true)
-                    canvas[y_int][x_int] = '.';
+                if(normal_dot_light > 0)
+                    canvas[y_int][x_int] = ' ';
                 else 
                     canvas[y_int][x_int] = SHADES[(int) (abs(normal_dot_light) * 12)];
 
@@ -212,7 +227,7 @@ int main() {
         frame_start = now;
 
         // Update canvas based on delta time
-        update_canvas(canvas, time_passed);
+        update_canvas(canvas, time_passed );
 
         // print canvas to terminal
         for (int i = 0; i < RESOLUTION; i++)
