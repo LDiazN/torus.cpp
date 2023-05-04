@@ -39,7 +39,7 @@ void normalize(float x, float y, float z, float& out_x, float& out_y, float& out
     out_z = z / magnitude;
 }
 
-void torus(float theta, float phi, float torus_radius, float tube_radius, float &out_x, float &out_y, float &out_z)
+void torus_point(float theta, float phi, float torus_radius, float tube_radius, float &out_x, float &out_y, float &out_z)
 {
     assert(tube_radius < torus_radius && "Radius of tube should be smaller than radius of torus");
     out_x = (torus_radius + tube_radius * cos(theta)) * cos(phi);
@@ -47,35 +47,11 @@ void torus(float theta, float phi, float torus_radius, float tube_radius, float 
     out_z = -tube_radius * sin(theta);
 }
 
-void torus_tangent(float theta, float phi, float tube_radius, float &out_x, float &out_y, float &out_z)
-{
-    out_x = -tube_radius * sin(theta) * cos(phi);
-    out_y = -tube_radius * sin(theta) * sin(phi);
-    out_z = -tube_radius * cos(theta);
-}
-
-void torus_bitangent(float theta, float phi, float torus_radius, float tube_radius, float &out_x, float &out_y, float &out_z)
-{
-    out_x = -(torus_radius + tube_radius * cos(theta)) * sin((phi));
-    out_y = -(torus_radius + tube_radius * cos(theta)) * cos(phi);
-    out_z = 0;
-}
-
 void torus_normal(float theta, float phi, float torus_radius, float tube_radius, float &out_x, float &out_y, float &out_z)
 {
-    float tangent_x, tangent_y, tangent_z;
-    float bitangent_x, bitangent_y, bitangent_z;
-    torus_tangent(theta, phi, tube_radius, tangent_x, tangent_y, tangent_z);
-    torus_bitangent(theta, phi, torus_radius, tube_radius, bitangent_x, bitangent_y, bitangent_z);
-
-    // cross(tangent_x, tangent_y, tangent_z, bitangent_x, bitangent_y, bitangent_z, out_x, out_y, out_z);
-    cross(bitangent_x, bitangent_y, bitangent_z,tangent_x, tangent_y, tangent_z, out_x, out_y, out_z);
-    normalize(out_x, out_y, out_z, out_x, out_y, out_z);
-
-    // DEBUG ONLY -----------------------------
     // We will compute a point in the middle of the tube and use it to compute the direction of the normal using a point in the torus surface
     float surface_x, surface_y, surface_z;
-    torus(theta, phi, torus_radius, tube_radius, surface_x, surface_y, surface_z);
+    torus_point(theta, phi, torus_radius, tube_radius, surface_x, surface_y, surface_z);
     float middle_x, middle_y, middle_z;
     middle_x = (torus_radius) * cos(phi);
     middle_y = (torus_radius) * sin(phi);
@@ -86,13 +62,6 @@ void torus_normal(float theta, float phi, float torus_radius, float tube_radius,
     out_z = (surface_z - middle_z);
 
     normalize(out_x, out_y, out_z, out_x, out_y, out_z);
-}
-
-void scale(float scale, float x, float y, float z, float& out_x, float& out_y, float& out_z)
-{
-    out_x = scale * x;
-    out_y = scale * y;
-    out_z = scale * z;
 }
 
 void translate(float offset_x, float offset_y, float offset_z, float x, float y, float z, float& out_x, float& out_y, float& out_z)
@@ -112,8 +81,6 @@ void rotate_y(float angle, float x, float y, float z, float& out_x, float& out_y
 
 void update_canvas(char (&canvas)[RESOLUTION][RESOLUTION], float time_passed)
 {
-    assert(RESOLUTION > 10);
-    float depth_buffer[RESOLUTION][RESOLUTION];
 
     // Define light direction for illumination
     float LIGHT_DIR_X = 0, LIGHT_DIR_Y = 1, LIGHT_DIR_Z = 1;
@@ -126,14 +93,12 @@ void update_canvas(char (&canvas)[RESOLUTION][RESOLUTION], float time_passed)
     // Clear canvas so the previous image is removed
     clear_canvas(canvas);
     
-    // Clear depth buffer. We store Z^-1 instead of Z, so 0 represents infinite distance
+    // Clear depth buffer. We use it to check whether we should write a new pixel depending on how far
+    // the current pixel is currently from the camera
+    float depth_buffer[RESOLUTION][RESOLUTION];
     for(int i = 0; i < RESOLUTION; i++)
         for(int j = 0; j < RESOLUTION; j++)
             depth_buffer[i][j] = 1000000;
-
-
-    // Now we will compute all the points in the torus based on some resolution, and
-    // then we will transform them properly.
 
     // To generate torus points we have to define a step size that 
     // will be the offset between angles we have to pass to the torus function.
@@ -151,23 +116,15 @@ void update_canvas(char (&canvas)[RESOLUTION][RESOLUTION], float time_passed)
             float x, y, z; // point coordinates
             float n_x, n_y, n_z; // point normal
 
-            // Compute this point
+            // Compute torus surface point and normal in that same point
             const float torus_radius = ((float) RESOLUTION) / 2.f;
             const float tube_radius = ((float) RESOLUTION) / 4.f;
-            torus(theta, phi,torus_radius, tube_radius, x, y, z);
+            torus_point(theta, phi,torus_radius, tube_radius, x, y, z);
             torus_normal(theta, phi, torus_radius, tube_radius, n_x, n_y, n_z);
-
-            // n_x = cos(theta);
-            // n_y = sin(theta);
-            // n_z = 0;
-
-            // Value stored in Depth Buffer
-            const float z_inv = z != 0 ? 1 / z : 0;
 
             // transform this point
             rotate_y(time_passed, x,y,z, x,y,z);
-            //scale(0.3f, x,y,z, x,y,z);
-            translate(torus_radius + tube_radius, torus_radius + tube_radius, 40, x,y,z, x,y,z);
+            translate((torus_radius + tube_radius) * 1.20, (torus_radius + tube_radius) * 1.20, 40, x,y,z, x,y,z);
 
             // transform normal: note that we only about rotation since translation doesn't apply and scale changes the size of the normal vector 
             // which must reamin of unit size
@@ -178,9 +135,11 @@ void update_canvas(char (&canvas)[RESOLUTION][RESOLUTION], float time_passed)
             x_int = (int) ((EYE_DISTANCE_TO_SCREEN * x / z));
             y_int = (int) ((EYE_DISTANCE_TO_SCREEN * y / z));
 
+            // Use depth buffer to check if this pixel should be shaded. Also check if the point is within the limits
+            // of the screen
             if (0 <= x_int && x_int < RESOLUTION && 0 <= y_int && y_int < RESOLUTION && depth_buffer[y_int][x_int] > z)
             {
-                // Choose shade of pixel 
+                // Shade this pixel
                 float normal_dot_light = dot(n_x,n_y,n_z, LIGHT_DIR_X, LIGHT_DIR_Y, LIGHT_DIR_Z);
 
                 // Since normal vector and light direction vector are both unit sized, then the dot is in the range [-1, 1].
@@ -188,7 +147,10 @@ void update_canvas(char (&canvas)[RESOLUTION][RESOLUTION], float time_passed)
                 if (abs(normal_dot_light) >= 1.0f)
                     normal_dot_light = normal_dot_light * 0.99;
 
-                // Choose lighting:
+                // Shade according to lighting: If normal and light are paralel, then this point is facing away of light.
+                // Otherwise, it's facing the light and we want to choose a shade based on how much antiparallel it is relative 
+                // to light direction
+
                 if(normal_dot_light > 0)
                     canvas[y_int][x_int] = ' ';
                 else 
@@ -227,7 +189,7 @@ int main() {
         frame_start = now;
 
         // Update canvas based on delta time
-        update_canvas(canvas, time_passed );
+        update_canvas(canvas, time_passed);
 
         // print canvas to terminal
         for (int i = 0; i < RESOLUTION; i++)
