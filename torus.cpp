@@ -72,12 +72,27 @@ void translate(float offset_x, float offset_y, float offset_z, float x, float y,
     out_z = z + offset_z;
 }
 
+// Rotate a point around the X axis
+void rotate_x(float angle, float x, float y, float z, float& out_x, float& out_y, float& out_z)
+{
+    out_x = x;
+    out_y = y * cos(angle) - z * sin(angle);
+    out_z = y * sin(angle) + z * cos(angle);
+}
+
 // Rotate a point around the Y axis
 void rotate_y(float angle, float x, float y, float z, float& out_x, float& out_y, float& out_z)
 {
     out_x = x * cos(angle) + z * sin(angle);
     out_y = y;
     out_z = -x * sin(angle) + z * cos(angle);
+}
+
+void rotate_z(float angle, float x, float y, float z, float& out_x, float& out_y, float& out_z)
+{
+    out_x = x * cos(angle) + y * sin(angle);
+    out_y = -x * sin(angle) + y * cos(angle);
+    out_z = z;
 }
 
 void update_canvas(char (&canvas)[RESOLUTION][RESOLUTION], float time_passed)
@@ -125,11 +140,15 @@ void update_canvas(char (&canvas)[RESOLUTION][RESOLUTION], float time_passed)
 
             // transform this point
             rotate_y(time_passed, x,y,z, x,y,z);
+            rotate_x(time_passed * 1.13, x,y,z, x,y,z);
+            rotate_z(time_passed * 1.74, x,y,z, x,y,z);
             translate((torus_radius + tube_radius) * 1.20, (torus_radius + tube_radius) * 1.20, 40, x,y,z, x,y,z);
 
             // transform normal: note that we only about rotation since translation doesn't apply and scale changes the size of the normal vector 
             // which must reamin of unit size
             rotate_y(time_passed, n_x,n_y,n_z, n_x,n_y,n_z);
+            rotate_x(time_passed * 1.13, n_x,n_y,n_z, n_x,n_y,n_z);
+            rotate_z(time_passed * 1.74, n_x,n_y,n_z, n_x,n_y,n_z);
 
             // Project this point to the screen: 
             int x_int, y_int;
@@ -201,7 +220,7 @@ int main() {
         cout << flush;
 
         // Wait for next update
-        this_thread::sleep_for(chrono::milliseconds(100));
+        this_thread::sleep_for(chrono::milliseconds(30));
 
         // Reset cursor back to draw position
         cout << "\033[" << RESOLUTION << "A";
