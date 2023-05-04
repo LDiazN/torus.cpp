@@ -7,7 +7,6 @@
 
 using namespace std;
 
-
 const int RESOLUTION = 20;
 const int TORUS_RESOLUTION = 360;
 const float EYE_DISTANCE_TO_SCREEN = 20;
@@ -61,6 +60,8 @@ void torus_normal(float theta, float phi, float torus_radius, float tube_radius,
     out_y = (surface_y - middle_y);
     out_z = (surface_z - middle_z);
 
+    // Note that the vector will have magnitude == tube_radius, this can be simplified by dividing each coordinate 
+    // by tube_radius
     normalize(out_x, out_y, out_z, out_x, out_y, out_z);
 }
 
@@ -163,11 +164,6 @@ void update_canvas(char (&canvas)[RESOLUTION][RESOLUTION], float time_passed)
 
 }
 
-float compute_delta_time()
-{
-    return 0;
-}
-
 int main() {
 
     // Where we're gonna draw
@@ -211,6 +207,5 @@ int main() {
         cout << "\033[" << RESOLUTION << "A";
     }
     
-
     return 0;
 }
