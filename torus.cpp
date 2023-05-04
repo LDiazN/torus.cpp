@@ -88,6 +88,7 @@ void rotate_y(float angle, float x, float y, float z, float& out_x, float& out_y
     out_z = -x * sin(angle) + z * cos(angle);
 }
 
+// Rotate a point around the Z axis
 void rotate_z(float angle, float x, float y, float z, float& out_x, float& out_y, float& out_z)
 {
     out_x = x * cos(angle) + y * sin(angle);
