@@ -18,13 +18,6 @@ void clear_canvas(char (&canvas)[RESOLUTION][RESOLUTION])
             canvas[i][j] = ' ';
 }
 
-void cross(float x1, float y1, float z1, float x2, float y2, float z2, float& out_x, float& out_y, float& out_z)
-{
-    out_x = y1 * z2 - z1 * y2;
-    out_y = z1 * x1 - x1 * z2;
-    out_z = x1 * y2 - y1 * x2;
-}
-
 float dot(float x1, float y1, float z1, float x2, float y2, float z2)
 {
     return x1 * x2 + y1 * y2 + z1 * z2;
@@ -199,7 +192,7 @@ int main() {
     {
         // Compute delta time: the time between the last frame start and now
         auto now = chrono::high_resolution_clock::now();
-        auto delta_time = chrono::duration_cast<chrono::microseconds>(now - frame_start).count() / 1000000.0f;
+        auto delta_time = chrono::duration_cast<chrono::milliseconds>(now - frame_start).count() / 1000.0f;
         time_passed += delta_time;
 
         frame_start = now;
