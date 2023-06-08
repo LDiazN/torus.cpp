@@ -8,7 +8,7 @@
 using namespace std;
 
 const int RESOLUTION = 20;
-const int TORUS_RESOLUTION = 360;
+const int TORUS_RESOLUTION = 200;
 const float EYE_DISTANCE_TO_SCREEN = 20;
 
 void clear_canvas(char (&canvas)[RESOLUTION][RESOLUTION])
@@ -113,6 +113,12 @@ void update_canvas(char (&canvas)[RESOLUTION][RESOLUTION], float time_passed)
     // To generate torus points we have to define a step size that 
     // will be the offset between angles we have to pass to the torus function.
     const float step_size = (2.f * M_PI) / TORUS_RESOLUTION;
+
+    // Compute radii of torus.
+    const float tube_radius = ((float) RESOLUTION) / 4.f;
+    const float torus_radius = ((float) RESOLUTION) / 2.f;
+
+    // Compute torus surface point and normal in that same point
     for (int i = 0; i < TORUS_RESOLUTION; i++)
     {
         const float phi = step_size * i;
@@ -125,10 +131,7 @@ void update_canvas(char (&canvas)[RESOLUTION][RESOLUTION], float time_passed)
 
             float x, y, z; // point coordinates
             float n_x, n_y, n_z; // point normal
-
-            // Compute torus surface point and normal in that same point
-            const float torus_radius = ((float) RESOLUTION) / 2.f;
-            const float tube_radius = ((float) RESOLUTION) / 4.f;
+            
             torus_point(theta, phi,torus_radius, tube_radius, x, y, z);
             torus_normal(theta, phi, torus_radius, tube_radius, n_x, n_y, n_z);
 
