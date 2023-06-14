@@ -141,8 +141,8 @@ void update_canvas(char (&canvas)[RESOLUTION][RESOLUTION], float time_passed)
             rotate_z(time_passed * 1.74, x,y,z, x,y,z);
             translate((torus_radius + tube_radius) * 1.20, (torus_radius + tube_radius) * 1.20, 40, x,y,z, x,y,z);
 
-            // transform normal: note that we only about rotation since translation doesn't apply and scale changes the size of the normal vector 
-            // which must reamin of unit size
+            // transform normal: note that we only care about rotation since translation doesn't apply, and scale changes the size of the normal vector 
+            // which must remain of unit size
             rotate_y(time_passed, n_x,n_y,n_z, n_x,n_y,n_z);
             rotate_x(time_passed * 1.13, n_x,n_y,n_z, n_x,n_y,n_z);
             rotate_z(time_passed * 1.74, n_x,n_y,n_z, n_x,n_y,n_z);
